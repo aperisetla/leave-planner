@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   });
 
   // Return distinct teams for filter dropdowns
-  const teams = [...new Set(members.map(m => m.team).filter(Boolean))];
+  const teams = Array.from(new Set(members.map(m => m.team).filter(Boolean)));
 
   return NextResponse.json({ members, teams });
 }
