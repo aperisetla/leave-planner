@@ -44,7 +44,7 @@ export function QuarterlyCalendar({ anchor, entries }: QuarterlyCalendarProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {summary.map(({ member, days, entries: memberEntries }) => {
-              const types = Array.from(new Set(memberEntries.map(e => e.leaveType)));
+              const types = Array.from(new Set(memberEntries.map((e: LeaveEntry) => e.leaveType)));
               return (
                 <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-2 flex items-center gap-2">
@@ -104,7 +104,7 @@ function MiniMonth({ month, entries }: { month: Date; entries: LeaveEntry[] }) {
           return (
             <div
               key={dayStr}
-              title={leaves.map(e => `${e.member.name} (${LEAVE_TYPE_CONFIG[e.leaveType].label})`).join(", ")}
+              title={leaves.map((e: LeaveEntry) => `${e.member.name} (${LEAVE_TYPE_CONFIG[e.leaveType].label})`).join(", ")}
               className={clsx(
                 "text-[11px] leading-6 relative",
                 isOff && "text-gray-300",
