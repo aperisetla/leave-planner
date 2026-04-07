@@ -1,0 +1,50 @@
+{
+  "name": "leave-planner",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:share": "next dev -H 0.0.0.0 -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^17.4.1",
+    "jira.js": "^4.0.0",
+    "lucide-react": "^0.378.0",
+    "next": "14.2.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "swr": "^2.2.5",
+    "tailwind-merge": "^2.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
+    "postcss": "^8",
+    "prisma": "^5.14.0",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.10.5",
+    "typescript": "^5"
+  }
+}

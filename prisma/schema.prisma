@@ -1,0 +1,87 @@
+// Leave Planner – Prisma Schema
+// Docs: https://pris.ly/d/prisma-schema
+//
+// Database: PostgreSQL (Neon serverless)
+// String fields are used for enum-like values so Prisma migrations stay simple.
+// Allowed values are enforced by Zod in API routes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")   // pooled connection (Neon / Vercel Postgres)
+  directUrl = env("DIRECT_URL")     // direct connection for migrations (Neon only)
+}
+
+// ─── Team Member ─────────────────────────────────────────────────────────────
+model TeamMember {
+  id            String  @id @default(cuid())
+  jiraAccountId String? @unique   // Atlassian account ID from JIRA
+  name          String
+  email         String  @unique
+  avatarUrl     String?
+  team          String?           // e.g. "Platform", "Frontend"
+  role          String?           // e.g. "Engineer", "TPM"
+  isActive      Boolean @default(true)
+
+  leaveEntries  LeaveEntry[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("team_members")
+}
+
+// ─── Leave Entry ─────────────────────────────────────────────────────────────
+// leaveType  : PTO | SICK | PUBLIC_HOLIDAY | PERSONAL | BEREAVEMENT | MATERNITY_PATERNITY | OTHER
+// status     : PENDING | APPROVED | REJECTED | CANCELLED
+model LeaveEntry {
+  id            String     @id @default(cuid())
+  memberId      String
+  member        TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  startDate     DateTime
+  endDate       DateTime
+  leaveType     String     @default("PTO")
+  status        String     @default("APPROVED")
+  notes         String?
+
+  // JIRA sync fields
+  jiraIssueKey  String?    @unique   // e.g. "LEAVE-42"
+  jiraIssueUrl  String?
+  jiraSummary   String?
+  lastSyncedAt  DateTime?
+
+  isManual      Boolean    @default(false)
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([memberId])
+  @@index([startDate, endDate])
+  @@map("leave_entries")
+}
+
+// ─── Sync Log ────────────────────────────────────────────────────────────────
+// status: RUNNING | SUCCESS | PARTIAL | FAILED
+model SyncLog {
+  id             String   @id @default(cuid())
+  triggeredAt    DateTime @default(now())
+  status         String   @default("RUNNING")
+  issuesSynced   Int      @default(0)
+  newEntries     Int      @default(0)
+  updatedEntries Int      @default(0)
+  errors         String?  // JSON array of error strings
+  durationMs     Int?
+
+  @@map("sync_logs")
+}
+
+// ─── Settings ────────────────────────────────────────────────────────────────
+model AppSetting {
+  key   String @id
+  value String
+
+  @@map("app_settings")
+}

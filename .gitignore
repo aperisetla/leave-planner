@@ -1,0 +1,43 @@
+# ── Next.js ──────────────────────────────────────────────────────────────────
+.next/
+out/
+
+# ── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Database (SQLite dev files – never commit these) ─────────────────────────
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+prisma/dev.db
+prisma/dev.db-journal
+prisma/dev.db-wal
+prisma/dev.db-shm
+
+# ── Environment / secrets – NEVER commit ─────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ── Build outputs ─────────────────────────────────────────────────────────────
+dist/
+build/
+
+# ── Vercel ────────────────────────────────────────────────────────────────────
+.vercel
+
+# ── TypeScript / Editor ───────────────────────────────────────────────────────
+*.tsbuildinfo
+.idea/
+.vscode/settings.json
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
