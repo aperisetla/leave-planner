@@ -44,7 +44,7 @@ export function QuarterlyCalendar({ anchor, entries }: QuarterlyCalendarProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {summary.map(({ member, days, entries: memberEntries }) => {
-              const types = [...new Set(memberEntries.map(e => e.leaveType))];
+              const types = Array.from(new Set(memberEntries.map(e => e.leaveType)));
               return (
                 <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-2 flex items-center gap-2">
