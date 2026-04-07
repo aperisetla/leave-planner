@@ -104,5 +104,5 @@ export function buildMemberSummary(entries: LeaveEntry[], from: Date, to: Date) 
     rec.entries.push(entry);
   }
 
-  return [...map.values()].sort((a, b) => b.days - a.days);
+  return Array.from(map.values()).sort((a, b) => b.days - a.days);
 }
