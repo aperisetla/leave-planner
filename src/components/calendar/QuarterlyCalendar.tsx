@@ -9,7 +9,7 @@ import {
   getLeavesForDay,
 } from "@/lib/calendar";
 import { LEAVE_TYPE_CONFIG } from "@/types";
-import type { LeaveEntry } from "@/types";
+import type { LeaveEntry, LeaveType } from "@/types";
 
 interface QuarterlyCalendarProps {
   anchor: Date;
@@ -44,7 +44,7 @@ export function QuarterlyCalendar({ anchor, entries }: QuarterlyCalendarProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {summary.map(({ member, days, entries: memberEntries }) => {
-              const types = Array.from(new Set(memberEntries.map((e: LeaveEntry) => e.leaveType)));
+              const types = Array.from(new Set(memberEntries.map((e: LeaveEntry) => e.leaveType))) as LeaveType[];
               return (
                 <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-2 flex items-center gap-2">
