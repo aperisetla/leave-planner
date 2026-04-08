@@ -86,19 +86,59 @@ export function DayDetailPanel({ date, leaves, onClose, onEdit, onDelete }: DayD
             </div>
           )}
 
-          {/* Public holiday banner */}
-          {holidays.length > 0 && (
-            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-3">
-              <span className="text-2xl">🎉</span>
-              <div>
-                <p className="font-semibold text-emerald-800 text-sm">Public Holiday</p>
-                <p className="text-xs text-emerald-600">
-                  {holidays.length} team member{holidays.length !== 1 ? "s" : ""} on holiday
-                  {holidays[0].notes ? ` · ${holidays[0].notes}` : ""}
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Public holiday section */}
+          {holidays.length > 0 && (() => {
+            const cfg = LEAVE_TYPE_CONFIG["PUBLIC_HOLIDAY"];
+            return (
+              <section>
+                {/* Banner header */}
+                <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-3 mb-2">
+                  <span className="text-2xl">🎉</span>
+                  <div>
+                    <p className="font-semibold text-emerald-800 text-sm">Public Holiday</p>
+                    <p className="text-xs text-emerald-600">
+                      {holidays.length} team member{holidays.length !== 1 ? "s" : ""} on holiday
+                      {holidays[0].notes ? ` · ${holidays[0].notes}` : ""}
+                    </p>
+                  </div>
+                </div>
+                {/* Individual member list */}
+                <ul className="space-y-1.5">
+                  {holidays.map(entry => (
+                    <li
+                      key={entry.id}
+                      className={clsx(
+                        "flex items-center gap-2 rounded-lg px-3 py-2",
+                        cfg.bgColor, "border border-transparent group"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-7 h-7 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold shrink-0" style={{ color: cfg.color }}>
+                          {entry.member.name.charAt(0)}
+                        </div>
+                        <p className={clsx("text-sm font-semibold truncate", cfg.textColor)}>
+                          {entry.member.name}
+                        </p>
+                      </div>
+                      {/* Edit / Delete on hover */}
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        {onEdit && (
+                          <button onClick={() => onEdit(entry)} title="Edit" className="p-1 rounded hover:bg-white/50 text-gray-500 hover:text-blue-600 transition-colors">
+                            <Pencil size={12} />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button onClick={() => { if (confirm(`Delete leave for ${entry.member.name}?`)) onDelete(entry); }} title="Delete" className="p-1 rounded hover:bg-white/50 text-gray-500 hover:text-red-600 transition-colors">
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })()}
 
           {/* Individual leaves grouped by type */}
           {(Object.entries(byType) as [LeaveType, LeaveEntry[]][]).map(([type, entries]) => {
