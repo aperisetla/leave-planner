@@ -266,7 +266,7 @@ export function AddLeaveModal({ isOpen, onClose, onSuccess, editEntry }: AddLeav
             </Field>
 
             {/* Notes */}
-            <Field label="Notes / Reason" hint="Optional">
+            <Field label="Notes / Reason">
               <textarea
                 value={form.notes}
                 onChange={e => set("notes", e.target.value)}
