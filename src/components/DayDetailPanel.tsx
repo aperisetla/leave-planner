@@ -98,8 +98,10 @@ export function DayDetailPanel({ date, leaves, onClose, onEdit, onDelete }: DayD
             </div>
           )}
 
-          {/* All leave types (including PUBLIC_HOLIDAY) grouped and listed individually */}
-          {(Object.entries(byType) as [LeaveType, LeaveEntry[]][]).map(([type, entries]) => {
+          {/* All leave types grouped — PUBLIC_HOLIDAY first, then others alphabetically */}
+          {(Object.entries(byType) as [LeaveType, LeaveEntry[]][])
+            .sort(([a], [b]) => (a === "PUBLIC_HOLIDAY" ? -1 : b === "PUBLIC_HOLIDAY" ? 1 : a.localeCompare(b)))
+            .map(([type, entries]) => {
             const cfg = LEAVE_TYPE_CONFIG[type];
             return (
               <section key={type}>
