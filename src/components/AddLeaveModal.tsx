@@ -133,7 +133,19 @@ export function AddLeaveModal({ isOpen, onClose, onSuccess, editEntry }: AddLeav
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data?.error?.formErrors?.[0] ?? data?.error ?? "Failed to save leave entry.");
+        // data.error can be a string OR a Zod flatten object { formErrors, fieldErrors }
+        let errorMsg = "Failed to save leave entry.";
+        if (typeof data?.error === "string") {
+          errorMsg = data.error;
+        } else if (data?.error?.formErrors?.[0]) {
+          errorMsg = data.error.formErrors[0];
+        } else if (data?.error?.fieldErrors) {
+          const first = Object.entries(data.error.fieldErrors as Record<string, string[]>)
+            .map(([f, msgs]) => `${f}: ${msgs.join(", ")}`)
+            .join("; ");
+          if (first) errorMsg = first;
+        }
+        throw new Error(errorMsg);
       }
 
       const memberName = members.find(m => m.id === form.memberId)?.name ?? "Team member";
