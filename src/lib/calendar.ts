@@ -32,26 +32,28 @@ export interface CalendarWeek {
   days: CalendarDay[];
 }
 
-/** Builds a 6-row x 7-col grid for a monthly calendar view. */
+/** Builds a grid of Mon–Fri weeks only (weekends excluded) for a monthly calendar view. */
 export function buildMonthGrid(anchor: Date, entries: LeaveEntry[]): CalendarWeek[] {
   const today = new Date();
   const monthStart = startOfMonth(anchor);
   const monthEnd = endOfMonth(anchor);
-  const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 }); // Sunday
-  const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday
+  const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const allDays = eachDayOfInterval({ start: gridStart, end: gridEnd });
+  // Only keep Mon–Fri
+  const allDays = eachDayOfInterval({ start: gridStart, end: gridEnd })
+    .filter(d => !isWeekend(d));
 
   const weeks: CalendarWeek[] = [];
-  for (let i = 0; i < allDays.length; i += 7) {
-    const week = allDays.slice(i, i + 7).map(date => ({
+  for (let i = 0; i < allDays.length; i += 5) {
+    const week = allDays.slice(i, i + 5).map(date => ({
       date,
       isCurrentMonth: isSameMonth(date, anchor),
-      isWeekend: isWeekend(date),
+      isWeekend: false,
       isToday: format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd"),
       leaves: getLeavesForDay(date, entries),
     }));
-    weeks.push({ days: week });
+    if (week.length > 0) weeks.push({ days: week });
   }
 
   return weeks;

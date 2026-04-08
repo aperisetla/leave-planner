@@ -6,7 +6,7 @@ import { buildMonthGrid } from "@/lib/calendar";
 import { LeaveBadge } from "./LeaveBadge";
 import type { LeaveEntry } from "@/types";
 
-const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 interface MonthlyCalendarProps {
   anchor: Date;           // any date within the target month
@@ -20,7 +20,7 @@ export function MonthlyCalendar({ anchor, entries, onDayClick }: MonthlyCalendar
   return (
     <div className="w-full border border-gray-200 rounded-xl overflow-hidden shadow-sm">
       {/* Day-of-week header */}
-      <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+      <div className="grid grid-cols-5 bg-gray-50 border-b border-gray-200">
         {DAY_HEADERS.map(d => (
           <div
             key={d}
@@ -34,7 +34,7 @@ export function MonthlyCalendar({ anchor, entries, onDayClick }: MonthlyCalendar
       {/* Weeks */}
       <div className="divide-y divide-gray-100">
         {weeks.map((week, wi) => (
-          <div key={wi} className="grid grid-cols-7 divide-x divide-gray-100 min-h-[96px]">
+          <div key={wi} className="grid grid-cols-5 divide-x divide-gray-100 min-h-[96px]">
             {week.days.map((day, di) => (
               <div
                 key={di}

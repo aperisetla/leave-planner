@@ -82,20 +82,25 @@ export function QuarterlyCalendar({ anchor, entries }: QuarterlyCalendarProps) {
 }
 
 function MiniMonth({ month, entries }: { month: Date; entries: LeaveEntry[] }) {
-  const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
+  // Only weekdays (Mon–Fri)
+  const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) })
+    .filter(d => !isWeekend(d));
   const today = format(new Date(), "yyyy-MM-dd");
+
+  // Leading blanks: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4
+  const leadingBlanks = days.length > 0 ? (days[0].getDay() - 1 + 7) % 7 : 0;
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <div className="bg-blue-600 text-white text-center py-1.5 text-sm font-semibold">
         {format(month, "MMMM yyyy")}
       </div>
-      <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 bg-gray-50 border-b border-gray-100 py-1">
-        {["S","M","T","W","T","F","S"].map((d, i) => <span key={i}>{d}</span>)}
+      <div className="grid grid-cols-5 text-center text-[10px] font-semibold text-gray-400 bg-gray-50 border-b border-gray-100 py-1">
+        {["M","T","W","T","F"].map((d, i) => <span key={i}>{d}</span>)}
       </div>
-      <div className="grid grid-cols-7 text-center gap-0">
+      <div className="grid grid-cols-5 text-center gap-0">
         {/* Leading blanks */}
-        {Array.from({ length: days[0].getDay() }).map((_, i) => <span key={`b-${i}`} />)}
+        {Array.from({ length: leadingBlanks }).map((_, i) => <span key={`b-${i}`} />)}
         {days.map(day => {
           const dayStr = format(day, "yyyy-MM-dd");
           const leaves = getLeavesForDay(day, entries);
