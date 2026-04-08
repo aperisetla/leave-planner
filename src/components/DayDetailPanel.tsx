@@ -26,15 +26,13 @@ export function DayDetailPanel({ date, leaves, onClose, onEdit, onDelete }: DayD
 
   if (!date) return null;
 
-  // Separate public holidays from individual leaves for cleaner display
-  const holidays = leaves.filter(e => e.leaveType === "PUBLIC_HOLIDAY");
-  const individual = leaves.filter(e => e.leaveType !== "PUBLIC_HOLIDAY");
-
-  // Group individual leaves by leave type for summary
-  const byType = individual.reduce<Partial<Record<LeaveType, LeaveEntry[]>>>((acc, e) => {
+  // Group ALL leaves by type (including PUBLIC_HOLIDAY)
+  const byType = leaves.reduce<Partial<Record<LeaveType, LeaveEntry[]>>>((acc, e) => {
     (acc[e.leaveType] ??= []).push(e);
     return acc;
   }, {});
+
+  const holidays = byType["PUBLIC_HOLIDAY"] ?? [];
 
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
@@ -86,54 +84,21 @@ export function DayDetailPanel({ date, leaves, onClose, onEdit, onDelete }: DayD
             </div>
           )}
 
-          {/* Public holiday section */}
+          {/* Public holiday banner (summary only) */}
           {holidays.length > 0 && (
-            <section>
-              {/* Banner header */}
-              <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-3 mb-2">
-                <span className="text-2xl">🎉</span>
-                <div>
-                  <p className="font-semibold text-emerald-800 text-sm">Public Holiday</p>
-                  <p className="text-xs text-emerald-600">
-                    {holidays.length} team member{holidays.length !== 1 ? "s" : ""} on holiday
-                    {holidays[0].notes ? ` · ${holidays[0].notes}` : ""}
-                  </p>
-                </div>
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-3">
+              <span className="text-2xl">🎉</span>
+              <div>
+                <p className="font-semibold text-emerald-800 text-sm">Public Holiday</p>
+                <p className="text-xs text-emerald-600">
+                  {holidays.length} team member{holidays.length !== 1 ? "s" : ""} on holiday
+                  {holidays[0].notes ? ` · ${holidays[0].notes}` : ""}
+                </p>
               </div>
-              {/* Individual member list */}
-              <ul className="space-y-1.5">
-                {holidays.map(entry => (
-                  <li
-                    key={entry.id}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 bg-emerald-100 border border-transparent group"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <div className="w-7 h-7 rounded-full bg-white/70 flex items-center justify-center text-xs font-bold text-emerald-600 shrink-0">
-                        {entry.member.name.charAt(0)}
-                      </div>
-                      <p className="text-sm font-semibold truncate text-emerald-800">
-                        {entry.member.name}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      {onEdit && (
-                        <button onClick={() => onEdit(entry)} title="Edit" className="p-1 rounded hover:bg-white/50 text-gray-500 hover:text-blue-600 transition-colors">
-                          <Pencil size={12} />
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button onClick={() => { if (confirm(`Delete leave for ${entry.member.name}?`)) onDelete(entry); }} title="Delete" className="p-1 rounded hover:bg-white/50 text-gray-500 hover:text-red-600 transition-colors">
-                          <Trash2 size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            </div>
           )}
 
-          {/* Individual leaves grouped by type */}
+          {/* All leave types (including PUBLIC_HOLIDAY) grouped and listed individually */}
           {(Object.entries(byType) as [LeaveType, LeaveEntry[]][]).map(([type, entries]) => {
             const cfg = LEAVE_TYPE_CONFIG[type];
             return (
