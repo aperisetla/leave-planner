@@ -7,13 +7,21 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { startOfMonth, endOfMonth, startOfQuarter, endOfQuarter } from "date-fns";
 
+const dateString = z.string().regex(
+  /^\d{4}-\d{2}-\d{2}$/,
+  "Date must be in YYYY-MM-DD format"
+);
+
 const CreateLeaveSchema = z.object({
-  memberId: z.string(),
-  startDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
-  endDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  memberId:  z.string().min(1, "Team member is required"),
+  startDate: dateString,
+  endDate:   dateString,
   leaveType: z.enum(["PTO", "SICK", "PUBLIC_HOLIDAY", "PERSONAL", "BEREAVEMENT", "MATERNITY_PATERNITY", "OTHER"]).default("PTO"),
-  status: z.enum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"]).default("APPROVED"),
-  notes: z.string().optional(),
+  status:    z.enum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"]).default("APPROVED"),
+  notes:     z.string().optional(),
+}).refine(d => d.endDate >= d.startDate, {
+  message: "End date cannot be before start date",
+  path: ["endDate"],
 });
 
 export async function GET(req: NextRequest) {
