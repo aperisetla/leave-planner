@@ -32,8 +32,12 @@ export async function GET(req: NextRequest) {
   const team = searchParams.get("team");
 
   const anchor = new Date(dateParam);
-  const from = view === "quarter" ? startOfQuarter(anchor) : startOfMonth(anchor);
-  const to   = view === "quarter" ? endOfQuarter(anchor)   : endOfMonth(anchor);
+  // Subtract 6h from `from` to handle IST dates stored as 18:30 UTC (previous UTC day)
+  const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+  const from = new Date(
+    (view === "quarter" ? startOfQuarter(anchor) : startOfMonth(anchor)).getTime() - SIX_HOURS_MS
+  );
+  const to   = view === "quarter" ? endOfQuarter(anchor) : endOfMonth(anchor);
 
   const entries = await prisma.leaveEntry.findMany({
     where: {
