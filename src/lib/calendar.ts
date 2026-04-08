@@ -9,8 +9,6 @@ import {
   endOfWeek,
   isWeekend,
   isSameMonth,
-  isWithinInterval,
-  parseISO,
   format,
   addMonths,
   startOfQuarter,
@@ -69,16 +67,26 @@ export function getQuarterLabel(anchor: Date): string {
   return `Q${getQuarter(anchor)} ${getYear(anchor)}`;
 }
 
-/** Filters entries that overlap with a given day. */
+/**
+ * Converts a UTC Date to an IST date string (YYYY-MM-DD).
+ * IST = UTC + 5:30. Used so entries stored as "prev-day 18:30 UTC"
+ * (= midnight IST) are placed on the correct IST calendar day.
+ */
+function toISTDateStr(d: Date): string {
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  return format(new Date(d.getTime() + IST_OFFSET_MS), "yyyy-MM-dd");
+}
+
+/** Filters entries that overlap with a given day (compares as IST date strings). */
 export function getLeavesForDay(day: Date, entries: LeaveEntry[]): LeaveEntry[] {
+  // dayStr: format in IST so it matches how entries are stored (IST midnight = 18:30 UTC prev day)
+  const dayStr = toISTDateStr(day);
   return entries.filter(e => {
-    const start = typeof e.startDate === "string" ? parseISO(e.startDate) : e.startDate;
-    const end   = typeof e.endDate   === "string" ? parseISO(e.endDate)   : e.endDate;
-    try {
-      return isWithinInterval(day, { start, end });
-    } catch {
-      return false;
-    }
+    const startD = typeof e.startDate === "string" ? new Date(e.startDate) : e.startDate;
+    const endD   = typeof e.endDate   === "string" ? new Date(e.endDate)   : e.endDate;
+    const startStr = toISTDateStr(startD);
+    const endStr   = toISTDateStr(endD);
+    return dayStr >= startStr && dayStr <= endStr;
   });
 }
 
