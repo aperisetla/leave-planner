@@ -5,11 +5,12 @@ import type { LeavesApiResponse, MembersApiResponse } from "@/types";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-export function useLeaves(view: "month" | "quarter", date: Date, team?: string) {
+export function useLeaves(view: "month" | "quarter", date: Date, team?: string, memberId?: string) {
   const params = new URLSearchParams({
     view,
     date: date.toISOString(),
-    ...(team ? { team } : {}),
+    ...(team     ? { team }     : {}),
+    ...(memberId ? { memberId } : {}),
   });
 
   const { data, error, isLoading, mutate } = useSWR<LeavesApiResponse>(

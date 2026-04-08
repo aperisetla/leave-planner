@@ -4,21 +4,27 @@ import { addMonths, addQuarters, format, subMonths, subQuarters } from "date-fns
 import { ChevronLeft, ChevronRight, RefreshCw, Calendar } from "lucide-react";
 import { clsx } from "clsx";
 
+interface Member { id: string; name: string; }
+
 interface CalendarToolbarProps {
   view: "month" | "quarter";
   anchor: Date;
   teams: string[];
   selectedTeam: string;
+  members: Member[];
+  selectedMember: string;
   isSyncing: boolean;
   onViewChange: (v: "month" | "quarter") => void;
   onAnchorChange: (d: Date) => void;
   onTeamChange: (t: string) => void;
+  onMemberChange: (id: string) => void;
   onSync: () => void;
 }
 
 export function CalendarToolbar({
   view, anchor, teams, selectedTeam,
-  isSyncing, onViewChange, onAnchorChange, onTeamChange, onSync,
+  members, selectedMember,
+  isSyncing, onViewChange, onAnchorChange, onTeamChange, onMemberChange, onSync,
 }: CalendarToolbarProps) {
   const label =
     view === "month"
@@ -79,6 +85,20 @@ export function CalendarToolbar({
           >
             <option value="">All Teams</option>
             {teams.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        )}
+        {members.length > 0 && (
+          <select
+            value={selectedMember}
+            onChange={e => onMemberChange(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Employees</option>
+            {members
+              .slice()
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map(m => <option key={m.id} value={m.id}>{m.name}</option>)
+            }
           </select>
         )}
         <button

@@ -12,16 +12,17 @@ import { useLeaves, useMembers } from "@/hooks/useLeaves";
 import type { LeaveEntry } from "@/types";
 
 export default function DashboardPage() {
-  const [view, setView]               = useState<"month" | "quarter">("month");
-  const [anchor, setAnchor]           = useState(() => new Date());
-  const [selectedTeam, setSelectedTeam] = useState("");
-  const [isSyncing, setIsSyncing]     = useState(false);
+  const [view, setView]                   = useState<"month" | "quarter">("month");
+  const [anchor, setAnchor]               = useState(() => new Date());
+  const [selectedTeam, setSelectedTeam]   = useState("");
+  const [selectedMember, setSelectedMember] = useState("");
+  const [isSyncing, setIsSyncing]         = useState(false);
   const [isAddLeaveOpen, setIsAddLeaveOpen] = useState(false);
   const [editEntry, setEditEntry]     = useState<LeaveEntry | undefined>(undefined);
   const [dayDetail, setDayDetail]     = useState<{ date: Date; leaves: LeaveEntry[] } | null>(null);
 
-  const { entries, isLoading, refresh } = useLeaves(view, anchor, selectedTeam || undefined);
-  const { teams } = useMembers();
+  const { entries, isLoading, refresh } = useLeaves(view, anchor, selectedTeam || undefined, selectedMember || undefined);
+  const { members, teams } = useMembers();
 
   const handleSync = useCallback(async () => {
     setIsSyncing(true);
@@ -66,10 +67,13 @@ export default function DashboardPage() {
           anchor={anchor}
           teams={teams}
           selectedTeam={selectedTeam}
+          members={members}
+          selectedMember={selectedMember}
           isSyncing={isSyncing}
           onViewChange={setView}
           onAnchorChange={setAnchor}
           onTeamChange={setSelectedTeam}
+          onMemberChange={setSelectedMember}
           onSync={handleSync}
         />
 
