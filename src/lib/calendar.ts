@@ -96,24 +96,49 @@ export function countWorkingDays(start: Date, end: Date): number {
   return eachDayOfInterval({ start, end }).filter(d => !isWeekend(d)).length;
 }
 
-/** Summarise leave days per member for a given period. */
+/**
+ * Summarise leave days per member for a given period.
+ *
+ * Uses a Set<string> of IST date strings per member so that overlapping
+ * leave entries (e.g. Maternity leave + a Public Holiday within that same
+ * range) are NOT double-counted. The "Days Off" value is the number of
+ * UNIQUE working days across all leaves in the period.
+ */
 export function buildMemberSummary(entries: LeaveEntry[], from: Date, to: Date) {
-  const map = new Map<string, { member: LeaveEntry["member"]; days: number; entries: LeaveEntry[] }>();
+  const map = new Map<string, {
+    member: LeaveEntry["member"];
+    daySet: Set<string>;
+    entries: LeaveEntry[];
+  }>();
 
   for (const entry of entries) {
     const start = parseISO(entry.startDate as string);
     const end   = parseISO(entry.endDate as string);
+
+    // Clamp to the requested period
     const clampedStart = start < from ? from : start;
     const clampedEnd   = end   > to   ? to   : end;
-    const days = countWorkingDays(clampedStart, clampedEnd);
+
+    // Skip entries that fall entirely outside the period
+    if (clampedStart > clampedEnd) continue;
 
     if (!map.has(entry.memberId)) {
-      map.set(entry.memberId, { member: entry.member, days: 0, entries: [] });
+      map.set(entry.memberId, { member: entry.member, daySet: new Set(), entries: [] });
     }
     const rec = map.get(entry.memberId)!;
-    rec.days += days;
     rec.entries.push(entry);
+
+    // Add each working day as an IST date string — Set deduplicates overlaps
+    eachDayOfInterval({ start: clampedStart, end: clampedEnd })
+      .filter(d => !isWeekend(d))
+      .forEach(d => rec.daySet.add(toISTDateStr(d)));
   }
 
-  return Array.from(map.values()).sort((a, b) => b.days - a.days);
+  return Array.from(map.values())
+    .map(({ member, daySet, entries: memberEntries }) => ({
+      member,
+      days: daySet.size,
+      entries: memberEntries,
+    }))
+    .sort((a, b) => b.days - a.days);
 }
