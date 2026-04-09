@@ -1,6 +1,8 @@
 "use client";
 
-import { format, parseISO, eachDayOfInterval, isWeekend, startOfMonth, endOfMonth } from "date-fns";
+import { useState } from "react";
+import { format, eachDayOfInterval, isWeekend, startOfMonth, endOfMonth } from "date-fns";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { clsx } from "clsx";
 import {
   getQuarterMonths,
@@ -9,7 +11,28 @@ import {
   getLeavesForDay,
 } from "@/lib/calendar";
 import { LEAVE_TYPE_CONFIG } from "@/types";
-import type { LeaveEntry, LeaveType } from "@/types";
+import type { LeaveEntry, LeaveType, LeaveStatus } from "@/types";
+
+/** Convert an ISO UTC string → readable IST date, e.g. "Apr 23" */
+function fmtIST(iso: string): string {
+  const d = new Date(new Date(iso).getTime() + 5.5 * 60 * 60 * 1000);
+  return format(d, "MMM d");
+}
+
+/** "Apr 1" or "Apr 1 – Apr 5" */
+function fmtRange(start: string, end: string): string {
+  const s = fmtIST(start);
+  const e = fmtIST(end);
+  return s === e ? s : `${s} – ${e}`;
+}
+
+const STATUS_STYLE: Record<LeaveStatus, string> = {
+  PLANNED:   "bg-blue-50   text-blue-700",
+  PENDING:   "bg-amber-50  text-amber-700",
+  APPROVED:  "bg-green-50  text-green-700",
+  REJECTED:  "bg-red-50    text-red-600",
+  CANCELLED: "bg-gray-100  text-gray-500",
+};
 
 interface QuarterlyCalendarProps {
   anchor: Date;
@@ -17,8 +40,11 @@ interface QuarterlyCalendarProps {
 }
 
 export function QuarterlyCalendar({ anchor, entries }: QuarterlyCalendarProps) {
-  const months = getQuarterMonths(anchor);
+  const months  = getQuarterMonths(anchor);
   const summary = buildMemberSummary(entries, startOfMonth(months[0]), endOfMonth(months[2]));
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const toggle = (id: string) => setExpandedId(prev => prev === id ? null : id);
 
   return (
     <div className="space-y-6">
@@ -44,31 +70,85 @@ export function QuarterlyCalendar({ anchor, entries }: QuarterlyCalendarProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {summary.map(({ member, days, entries: memberEntries }) => {
-              const types = Array.from(new Set(memberEntries.map((e: LeaveEntry) => e.leaveType))) as LeaveType[];
+              const types      = Array.from(new Set(memberEntries.map((e: LeaveEntry) => e.leaveType))) as LeaveType[];
+              const isExpanded = expandedId === member.id;
+              const sorted     = [...memberEntries].sort((a, b) =>
+                (a.startDate as string).localeCompare(b.startDate as string)
+              );
               return (
-                <tr key={member.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-2 flex items-center gap-2">
-                    {member.avatarUrl ? (
-                      <img src={member.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-bold">
-                        {member.name.charAt(0)}
+                <>
+                  {/* Summary row — click anywhere to expand */}
+                  <tr
+                    key={member.id}
+                    onClick={() => toggle(member.id)}
+                    className="hover:bg-blue-50 transition-colors cursor-pointer select-none"
+                  >
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        {member.avatarUrl ? (
+                          <img src={member.avatarUrl} alt="" className="w-7 h-7 rounded-full shrink-0" />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-bold shrink-0">
+                            {member.name.charAt(0)}
+                          </div>
+                        )}
+                        <span className="font-medium text-gray-800">{member.name}</span>
                       </div>
-                    )}
-                    <span className="font-medium text-gray-800">{member.name}</span>
-                  </td>
-                  <td className="px-4 py-2 text-gray-500">{member.team ?? "—"}</td>
-                  <td className="px-4 py-2 text-right font-semibold text-gray-800">{days}</td>
-                  <td className="px-4 py-2">
-                    <div className="flex flex-wrap gap-1">
-                      {types.map(t => (
-                        <span key={t} className={clsx("px-1.5 py-0.5 rounded text-xs font-medium", LEAVE_TYPE_CONFIG[t].bgColor, LEAVE_TYPE_CONFIG[t].textColor)}>
-                          {LEAVE_TYPE_CONFIG[t].label}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-2.5 text-gray-500">{member.team ?? "—"}</td>
+                    {/* Days Off — highlighted as a clickable hint */}
+                    <td className="px-4 py-2.5 text-right">
+                      <span className="inline-flex items-center gap-1 font-semibold text-blue-600">
+                        {days}
+                        {isExpanded
+                          ? <ChevronUp size={13} className="opacity-60" />
+                          : <ChevronDown size={13} className="opacity-60" />}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex flex-wrap gap-1">
+                        {types.map(t => (
+                          <span key={t} className={clsx("px-1.5 py-0.5 rounded text-xs font-medium", LEAVE_TYPE_CONFIG[t].bgColor, LEAVE_TYPE_CONFIG[t].textColor)}>
+                            {LEAVE_TYPE_CONFIG[t].label}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Expanded detail rows */}
+                  {isExpanded && (
+                    <tr key={`${member.id}-detail`}>
+                      <td colSpan={4} className="px-0 py-0 bg-blue-50/60 border-t border-blue-100">
+                        <div className="px-6 py-3 space-y-1.5">
+                          {sorted.map(entry => {
+                            const cfg = LEAVE_TYPE_CONFIG[entry.leaveType];
+                            return (
+                              <div key={entry.id} className="flex items-center gap-3 text-sm flex-wrap">
+                                {/* Date range */}
+                                <span className="w-32 shrink-0 text-gray-600 font-medium tabular-nums">
+                                  {fmtRange(entry.startDate as string, entry.endDate as string)}
+                                </span>
+                                {/* Leave type */}
+                                <span className={clsx("px-2 py-0.5 rounded text-xs font-semibold", cfg.bgColor, cfg.textColor)}>
+                                  {cfg.label}
+                                </span>
+                                {/* Status */}
+                                <span className={clsx("px-2 py-0.5 rounded text-xs font-semibold", STATUS_STYLE[entry.status as LeaveStatus] ?? "bg-gray-100 text-gray-500")}>
+                                  {entry.status.charAt(0) + entry.status.slice(1).toLowerCase()}
+                                </span>
+                                {/* Notes */}
+                                {entry.notes && (
+                                  <span className="text-gray-400 text-xs truncate max-w-xs">{entry.notes}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
               );
             })}
             {summary.length === 0 && (
