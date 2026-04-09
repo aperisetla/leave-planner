@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { isAdminRequest, unauthorizedResponse } from "@/lib/adminAuth";
 
 const UpdateLeaveSchema = z.object({
   memberId:  z.string().optional(),
@@ -19,6 +20,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!isAdminRequest(req)) return unauthorizedResponse();
   const entry = await prisma.leaveEntry.findUnique({ where: { id: params.id } });
   if (!entry) return NextResponse.json({ error: "Leave entry not found" }, { status: 404 });
 
@@ -62,9 +64,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!isAdminRequest(req)) return unauthorizedResponse();
   const entry = await prisma.leaveEntry.findUnique({ where: { id: params.id } });
   if (!entry) return NextResponse.json({ error: "Leave entry not found" }, { status: 404 });
 

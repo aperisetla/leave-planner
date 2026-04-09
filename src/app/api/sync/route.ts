@@ -2,11 +2,13 @@
  * POST /api/sync  – trigger a JIRA → DB sync
  * GET  /api/sync  – return last 10 sync logs
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { syncJiraLeaves } from "@/lib/jira/sync";
+import { isAdminRequest, unauthorizedResponse } from "@/lib/adminAuth";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) return unauthorizedResponse();
   try {
     const result = await syncJiraLeaves();
     return NextResponse.json(result);

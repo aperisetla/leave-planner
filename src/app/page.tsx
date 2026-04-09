@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Plus } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Plus, Lock, LockOpen } from "lucide-react";
 import { CalendarToolbar } from "@/components/CalendarToolbar";
 import { MonthlyCalendar } from "@/components/calendar/MonthlyCalendar";
 import { QuarterlyCalendar } from "@/components/calendar/QuarterlyCalendar";
 import { LeaveLegend } from "@/components/LeaveLegend";
 import { AddLeaveModal } from "@/components/AddLeaveModal";
 import { DayDetailPanel } from "@/components/DayDetailPanel";
+import { AdminUnlockModal } from "@/components/AdminUnlockModal";
 import { useLeaves, useMembers } from "@/hooks/useLeaves";
 import type { LeaveEntry } from "@/types";
 
@@ -18,16 +19,42 @@ export default function DashboardPage() {
   const [selectedMember, setSelectedMember] = useState("");
   const [isSyncing, setIsSyncing]         = useState(false);
   const [isAddLeaveOpen, setIsAddLeaveOpen] = useState(false);
-  const [editEntry, setEditEntry]     = useState<LeaveEntry | undefined>(undefined);
-  const [dayDetail, setDayDetail]     = useState<{ date: Date; leaves: LeaveEntry[] } | null>(null);
+  const [editEntry, setEditEntry]         = useState<LeaveEntry | undefined>(undefined);
+  const [dayDetail, setDayDetail]         = useState<{ date: Date; leaves: LeaveEntry[] } | null>(null);
+
+  // Admin mode state
+  const [isAdmin, setIsAdmin]             = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
   const { entries, isLoading, refresh } = useLeaves(view, anchor, selectedTeam || undefined, selectedMember || undefined);
   const { members, teams } = useMembers();
 
+  // Restore admin session from sessionStorage on first render
+  useEffect(() => {
+    const stored = sessionStorage.getItem("adminPassword");
+    if (stored) { setAdminPassword(stored); setIsAdmin(true); }
+  }, []);
+
+  const handleAdminUnlock = (password: string) => {
+    setAdminPassword(password);
+    setIsAdmin(true);
+    sessionStorage.setItem("adminPassword", password);
+    setIsAdminModalOpen(false);
+  };
+
+  const handleAdminLock = () => {
+    setAdminPassword("");
+    setIsAdmin(false);
+    sessionStorage.removeItem("adminPassword");
+  };
+
+  const adminHeaders = { "X-Admin-Password": adminPassword };
+
   const handleSync = useCallback(async () => {
     setIsSyncing(true);
     try {
-      const res = await fetch("/api/sync", { method: "POST" });
+      const res = await fetch("/api/sync", { method: "POST", headers: adminHeaders });
       const result = await res.json();
       if (result.error) throw new Error(result.error);
       await refresh();
@@ -37,7 +64,8 @@ export default function DashboardPage() {
     } finally {
       setIsSyncing(false);
     }
-  }, [refresh]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh, adminPassword]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -51,13 +79,38 @@ export default function DashboardPage() {
             AFI India · 28 members · Track absences &amp; sync from JIRA
           </p>
         </div>
-        <button
-          onClick={() => setIsAddLeaveOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl shadow-sm hover:bg-blue-700 active:bg-blue-800 transition-colors"
-        >
-          <Plus size={16} />
-          Add Leave
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Admin unlock / lock toggle */}
+          {isAdmin ? (
+            <button
+              onClick={handleAdminLock}
+              title="Lock admin mode"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors"
+            >
+              <LockOpen size={14} />
+              Admin
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsAdminModalOpen(true)}
+              title="Unlock admin mode"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              <Lock size={14} />
+            </button>
+          )}
+
+          {/* Add Leave — admin only */}
+          {isAdmin && (
+            <button
+              onClick={() => setIsAddLeaveOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl shadow-sm hover:bg-blue-700 active:bg-blue-800 transition-colors"
+            >
+              <Plus size={16} />
+              Add Leave
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Main content */}
@@ -70,6 +123,7 @@ export default function DashboardPage() {
           members={members}
           selectedMember={selectedMember}
           isSyncing={isSyncing}
+          isAdmin={isAdmin}
           onViewChange={setView}
           onAnchorChange={setAnchor}
           onTeamChange={setSelectedTeam}
@@ -109,6 +163,7 @@ export default function DashboardPage() {
       <AddLeaveModal
         isOpen={isAddLeaveOpen || !!editEntry}
         editEntry={editEntry}
+        adminPassword={adminPassword}
         onClose={() => { setIsAddLeaveOpen(false); setEditEntry(undefined); }}
         onSuccess={() => {
           refresh();
@@ -117,21 +172,23 @@ export default function DashboardPage() {
         }}
       />
 
-      {/* Day Detail Slide-over */}
+      {/* Day Detail Slide-over — edit/delete only available in admin mode */}
       <DayDetailPanel
         date={dayDetail?.date ?? null}
         leaves={dayDetail?.leaves ?? []}
         onClose={() => setDayDetail(null)}
-        onEdit={entry => {
-          setDayDetail(null);          // close the panel
-          setEditEntry(entry);         // open edit modal
-        }}
-        onDelete={async entry => {
+        onEdit={isAdmin ? entry => {
+          setDayDetail(null);
+          setEditEntry(entry);
+        } : undefined}
+        onDelete={isAdmin ? async entry => {
           try {
-            const res = await fetch(`/api/leaves/${entry.id}`, { method: "DELETE" });
+            const res = await fetch(`/api/leaves/${entry.id}`, {
+              method: "DELETE",
+              headers: adminHeaders,
+            });
             if (!res.ok) throw new Error("Delete failed");
             await refresh();
-            // Update the panel's leave list so it reflects the deletion immediately
             setDayDetail(prev => prev
               ? { ...prev, leaves: prev.leaves.filter(l => l.id !== entry.id) }
               : null
@@ -139,7 +196,14 @@ export default function DashboardPage() {
           } catch {
             alert("❌ Could not delete this entry. Please try again.");
           }
-        }}
+        } : undefined}
+      />
+
+      {/* Admin unlock modal */}
+      <AdminUnlockModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onUnlock={handleAdminUnlock}
       />
     </div>
   );

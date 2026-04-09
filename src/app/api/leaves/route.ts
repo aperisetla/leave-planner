@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { startOfMonth, endOfMonth, startOfQuarter, endOfQuarter } from "date-fns";
+import { isAdminRequest, unauthorizedResponse } from "@/lib/adminAuth";
 
 const dateString = z.string().regex(
   /^\d{4}-\d{2}-\d{2}$/,
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) return unauthorizedResponse();
   const body = await req.json();
   const parsed = CreateLeaveSchema.safeParse(body);
 

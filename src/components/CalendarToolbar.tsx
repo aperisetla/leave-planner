@@ -14,6 +14,7 @@ interface CalendarToolbarProps {
   members: Member[];
   selectedMember: string;
   isSyncing: boolean;
+  isAdmin: boolean;
   onViewChange: (v: "month" | "quarter") => void;
   onAnchorChange: (d: Date) => void;
   onTeamChange: (t: string) => void;
@@ -24,7 +25,7 @@ interface CalendarToolbarProps {
 export function CalendarToolbar({
   view, anchor, teams, selectedTeam,
   members, selectedMember,
-  isSyncing, onViewChange, onAnchorChange, onTeamChange, onMemberChange, onSync,
+  isSyncing, isAdmin, onViewChange, onAnchorChange, onTeamChange, onMemberChange, onSync,
 }: CalendarToolbarProps) {
   const label =
     view === "month"
@@ -101,19 +102,21 @@ export function CalendarToolbar({
             }
           </select>
         )}
-        <button
-          onClick={onSync}
-          disabled={isSyncing}
-          className={clsx(
-            "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
-            isSyncing
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          )}
-        >
-          <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
-          {isSyncing ? "Syncing…" : "Sync JIRA"}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={onSync}
+            disabled={isSyncing}
+            className={clsx(
+              "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+              isSyncing
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            )}
+          >
+            <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
+            {isSyncing ? "Syncing…" : "Sync JIRA"}
+          </button>
+        )}
       </div>
     </div>
   );

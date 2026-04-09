@@ -22,6 +22,7 @@ interface AddLeaveModalProps {
   onClose: () => void;
   onSuccess: () => void;
   editEntry?: LeaveEntry;   // when set, modal is in "edit" mode
+  adminPassword: string;    // required — sent as X-Admin-Password header
 }
 
 interface FormState {
@@ -55,7 +56,7 @@ const STATUS_OPTIONS: { value: LeaveStatus; label: string }[] = [
   { value: "CANCELLED",label: "Cancelled"},
 ];
 
-export function AddLeaveModal({ isOpen, onClose, onSuccess, editEntry }: AddLeaveModalProps) {
+export function AddLeaveModal({ isOpen, onClose, onSuccess, editEntry, adminPassword }: AddLeaveModalProps) {
   const isEditing = !!editEntry;
   const { members, isLoading: membersLoading } = useMembers();
   const [form, setForm]         = useState<FormState>(EMPTY_FORM);
@@ -120,7 +121,7 @@ export function AddLeaveModal({ isOpen, onClose, onSuccess, editEntry }: AddLeav
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Admin-Password": adminPassword },
         body: JSON.stringify({
           memberId:  form.memberId,
           startDate: form.startDate,
