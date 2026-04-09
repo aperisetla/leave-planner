@@ -18,7 +18,7 @@ const CreateLeaveSchema = z.object({
   startDate: dateString,
   endDate:   dateString,
   leaveType: z.enum(["PTO", "SICK", "PUBLIC_HOLIDAY", "PERSONAL", "BEREAVEMENT", "MATERNITY_PATERNITY", "OTHER"]).default("PTO"),
-  status:    z.enum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"]).default("APPROVED"),
+  status:    z.enum(["PLANNED", "PENDING", "APPROVED", "REJECTED", "CANCELLED"]).default("APPROVED"),
   notes:     z.string().optional(),
 }).refine(d => d.endDate >= d.startDate, {
   message: "End date cannot be before start date",

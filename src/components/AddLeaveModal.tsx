@@ -50,8 +50,9 @@ const EMPTY_FORM: FormState = {
 };
 
 const STATUS_OPTIONS: { value: LeaveStatus; label: string }[] = [
-  { value: "APPROVED", label: "Approved" },
+  { value: "PLANNED",  label: "Planned"  },
   { value: "PENDING",  label: "Pending"  },
+  { value: "APPROVED", label: "Approved" },
   { value: "REJECTED", label: "Rejected" },
   { value: "CANCELLED",label: "Cancelled"},
 ];

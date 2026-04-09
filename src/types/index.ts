@@ -7,7 +7,7 @@ export type LeaveType =
   | "MATERNITY_PATERNITY"
   | "OTHER";
 
-export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+export type LeaveStatus = "PLANNED" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 export interface TeamMember {
   id: string;

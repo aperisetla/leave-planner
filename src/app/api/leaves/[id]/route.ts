@@ -12,7 +12,7 @@ const UpdateLeaveSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   endDate:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   leaveType: z.enum(["PTO","SICK","PUBLIC_HOLIDAY","PERSONAL","BEREAVEMENT","MATERNITY_PATERNITY","OTHER"]).optional(),
-  status:    z.enum(["PENDING","APPROVED","REJECTED","CANCELLED"]).optional(),
+  status:    z.enum(["PLANNED","PENDING","APPROVED","REJECTED","CANCELLED"]).optional(),
   notes:     z.string().nullable().optional(),
 });
 

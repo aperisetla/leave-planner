@@ -139,11 +139,17 @@ export function DayDetailPanel({ date, leaves, onClose, onEdit, onDelete }: DayD
                       {/* Status badge */}
                       <span className={clsx(
                         "text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0",
-                        entry.status === "APPROVED" ? "bg-white/60 text-green-700" :
+                        entry.status === "APPROVED" ? "bg-white/60 text-green-700"  :
                         entry.status === "PENDING"  ? "bg-white/60 text-amber-700" :
+                        entry.status === "PLANNED"  ? "bg-white/60 text-blue-600"  :
+                        entry.status === "REJECTED" ? "bg-white/60 text-red-600"   :
                         "bg-white/60 text-gray-500"
                       )}>
-                        {entry.status}
+                        {entry.status === "PLANNED"  ? "Planned"  :
+                         entry.status === "PENDING"  ? "Pending"  :
+                         entry.status === "APPROVED" ? "Approved" :
+                         entry.status === "REJECTED" ? "Rejected" :
+                         "Cancelled"}
                       </span>
 
                       {/* Edit / Delete — visible on hover */}
